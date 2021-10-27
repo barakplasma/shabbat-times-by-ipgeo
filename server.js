@@ -21,7 +21,7 @@ fastify.get("/", async function(request, reply) {
   let geoloc = geoip.lookup(ip);
   console.info({geoloc});
   let times = await got(
-    "https://www.hebcal.com/shabbat?cfg=json&geonameid=293397&M=on"
+    `https://www.hebcal.com/shabbat?cfg=json&geo=pos&latitude=${geoloc.ll[0]}&longitude=${geoloc.ll[1]}&tzid=${geoloc.timezone}&M=on`
   ).json();
   let candle = times.items.filter(x => x.title.includes("Candle"))[0].title;
   let Havdalah = times.items.filter(x => x.title.includes("Havdalah"))[0].title;
