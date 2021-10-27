@@ -4,32 +4,28 @@ const geoip = require("geoip-lite");
 // Require the fastify framework and instantiate it
 const fastify = require("fastify")({
   // Set this to true for detailed logging:
-  logger: false,
+  logger: false
 });
 
 fastify.get("/", async function(request, reply) {
-  let ip = request.headers['x-forwarded-for'].split(',')[0];
+  let ip = request.headers["x-forwarded-for"].split(",")[0];
   let geoloc = geoip.lookup(ip);
   let times = await got(
-    `https://www.hebcal.com/shabbat?cfg=json&geo=pos&latitude=${geoloc.ll[0]}&longitude=${geoloc.ll[1]}&tzid=${geoloc.timezone}&M=on`
+    `https://www.hebcal.com/shabbat?cfg=json&geo=pos&latitude=${
+      geoloc.ll[0]
+    }&longitude=${geoloc.ll[1]}&tzid=${geoloc.timezone}&M=on`
   ).json();
-  console.info({geoloc, times, items: times.items})
+  console.info({ geoloc, times, items: times.items });
   let candle = times.items.find(x => x.category.includes("candles")).title;
   let havdalah = times.items.find(x => x.category.includes("havdalah")).title;
-  let parashat = times.items.find(x => x.category.includes('parashat')).hebrew;
+  let parashat = times.items.find(x => x.category.includes("parashat")).hebrew;
 
-  reply.type('application/json').send(
-    JSON.stringify(
-      {
-        geoloc,
-        ip,
-        parashat,
-        times: `In: ${geoloc.city}\n${candle}\n${havdalah}\n${parashat}`
-      },
-      null,
-      2
-    )
-  );
+  reply.type("application/json").send({
+    geoloc,
+    ip,
+    parashat,
+    times: `In:${geoloc.city};${parashat}\n${candle}\n${havdalah}`
+  });
 });
 
 // Run the server and report out to the logs
