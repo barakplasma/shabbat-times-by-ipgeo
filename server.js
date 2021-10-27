@@ -1,37 +1,30 @@
-/**
- * This is the main Node.js server script for your project
- * Check out the two endpoints this back-end API provides in fastify.get and fastify.post below
- */
 const got = require("got");
 const geoip = require("geoip-lite");
 
 // Require the fastify framework and instantiate it
 const fastify = require("fastify")({
   // Set this to true for detailed logging:
-  logger: true
+  logger: false,
 });
 
-/**
- * Our home page route
- *
- * Returns src/pages/index.hbs with data built into it
- */
 fastify.get("/", async function(request, reply) {
   let ip = request.headers['x-forwarded-for'].split(',')[0];
   let geoloc = geoip.lookup(ip);
-  console.info({geoloc});
   let times = await got(
     `https://www.hebcal.com/shabbat?cfg=json&geo=pos&latitude=${geoloc.ll[0]}&longitude=${geoloc.ll[1]}&tzid=${geoloc.timezone}&M=on`
   ).json();
-  let candle = times.items.filter(x => x.title.includes("Candle"))[0].title;
-  let Havdalah = times.items.filter(x => x.title.includes("Havdalah"))[0].title;
+  console.info({geoloc, times, items: times.items})
+  let candle = times.items.find(x => x.category.includes("candles")).title;
+  let havdalah = times.items.find(x => x.category.includes("havdalah")).title;
+  let parashat = times.items.find(x => x.category.includes('parashat')).hebrew;
 
-  reply.send(
+  reply.type('application/json').send(
     JSON.stringify(
       {
         geoloc,
         ip,
-        times: "\n" + candle + "\n" + Havdalah
+        parashat,
+        times: `In: ${geoloc.city}\n${candle}\n${havdalah}\n${parashat}`
       },
       null,
       2
